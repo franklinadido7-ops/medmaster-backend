@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MedMaster AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#0B1628;--navy2:#132035;--blue:#1E6FD9;--blue2:#3A8BF5;
+  --green:#22C78A;--red:#E8445A;--orange:#F5A623;--purple:#8B5CF6;
+  --bg:#F7F9FC;--text:#0B1628;--muted:#6B7A99;--border:#E2E8F4;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+#login-screen{min-height:100vh;background:var(--navy);display:flex;align-items:center;justify-content:center;padding:20px;}
+.login-box{background:white;border-radius:16px;padding:36px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.4);}
+.login-logo{text-align:center;font-family:'DM Serif Display',serif;font-size:28px;color:var(--navy);margin-bottom:6px;}
+.login-logo span{color:var(--blue);}
+.login-sub{text-align:center;font-size:13px;color:var(--muted);margin-bottom:28px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;}
+.field input{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:9px;font-size:14px;font-family:'Inter',sans-serif;outline:none;transition:border-color .15s;}
+.field input:focus{border-color:var(--blue);}
+.btn-login{width:100%;padding:13px;background:var(--blue);color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;}
+.btn-login:hover{background:var(--blue2);}
+.btn-login:disabled{opacity:.5;cursor:not-allowed;}
+.login-err{background:rgba(232,68,90,.08);border:1px solid rgba(232,68,90,.25);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--red);margin-bottom:14px;display:none;}
+#app{display:none;min-height:100vh;}
+.layout{display:flex;min-height:100vh;}
+.sidebar{width:220px;min-width:220px;background:var(--navy);display:flex;flex-direction:column;padding:20px 0;position:fixed;top:0;left:0;height:100vh;z-index:10;overflow-y:auto;}
+.s-logo{padding:0 18px 24px;font-family:'DM Serif Display',serif;font-size:20px;color:white;}
+.s-logo span{color:var(--blue);}
+.s-logo small{display:block;font-family:'Inter',sans-serif;font-size:9px;color:#3A4560;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px;}
+.s-lbl{font-size:9px;font-weight:700;color:#2E3D5B;letter-spacing:1.4px;text-transform:uppercase;padding:0 18px;margin-bottom:5px;}
+.s-btn{background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:9px;padding:8px 10px;margin:0 8px;width:calc(100% - 16px);border-radius:8px;color:#7A8EAD;font-size:13px;font-family:'Inter',sans-serif;font-weight:500;transition:all .15s;text-align:left;}
+.s-btn:hover{background:rgba(255,255,255,.05);color:#C8D8F0;}
+.s-btn.active{background:rgba(30,111,217,.2);color:var(--blue2);}
+.s-badge{background:var(--red);color:white;font-size:10px;font-weight:700;padding:1px 6px;border-radius:99px;margin-left:auto;}
+.s-footer{margin-top:auto;padding:12px 10px;}
+.s-mode{padding:10px 12px;border-radius:8px;background:rgba(255,255,255,.04);font-size:11.5px;color:#7A8EAD;margin-bottom:8px;}
+.s-mode strong{color:white;display:block;font-size:12px;margin-bottom:2px;}
+.btn-logout{width:100%;background:rgba(232,68,90,.1);border:none;border-radius:8px;padding:8px;color:var(--red);font-size:12px;font-family:'Inter',sans-serif;cursor:pointer;font-weight:600;}
+.btn-logout:hover{background:rgba(232,68,90,.2);}
+.main{margin-left:220px;flex:1;padding:28px 32px;max-width:calc(100vw - 220px);}
+.page{display:none;}.page.active{display:block;}
+.ph{margin-bottom:24px;}.ph h1{font-family:'DM Serif Display',serif;font-size:26px;color:var(--navy);}
+.ph p{font-size:13px;color:var(--muted);margin-top:3px;}
+.card{background:white;border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;}
+.card-title{font-size:14px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:9px;border:none;cursor:pointer;font-size:13.5px;font-family:'Inter',sans-serif;font-weight:600;transition:all .15s;}
+.btn-primary{background:var(--blue);color:white;}.btn-primary:hover{background:var(--blue2);}
+.btn-primary:disabled{opacity:.45;cursor:not-allowed;}
+.btn-outline{background:white;color:var(--text);border:1.5px solid var(--border);}.btn-outline:hover{border-color:var(--blue);color:var(--blue);}
+.btn-sm{padding:6px 13px;font-size:12px;}
+.upload-zone{border:2px dashed var(--border);border-radius:12px;padding:32px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg);}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--blue);background:rgba(30,111,217,.04);}
+.fmt-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:rgba(30,111,217,.1);color:var(--blue);display:inline-block;margin:3px;}
+.file-list{display:flex;flex-direction:column;gap:7px;margin-top:12px;}
+.file-item{display:flex;align-items:center;gap:10px;background:var(--bg);border-radius:8px;padding:8px 12px;font-size:13px;}
+.file-name{flex:1;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.file-del{background:none;border:none;cursor:pointer;color:var(--muted);font-size:15px;padding:2px 5px;border-radius:4px;}
+.file-del:hover{color:var(--red);}
+.gen-opts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+.gen-opt{border:2px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;text-align:center;transition:all .15s;background:white;}
+.gen-opt:hover{border-color:var(--blue);}
+.gen-opt.sel{border-color:var(--blue);background:rgba(30,111,217,.05);}
+.gen-opt .oi{font-size:22px;margin-bottom:4px;}
+.gen-opt .ol{font-size:12px;font-weight:600;}
+.gen-opt .od{font-size:10.5px;color:var(--muted);margin-top:2px;}
+.rag-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--navy);border-radius:8px;padding:8px 13px;margin-bottom:14px;}
+.rag-lbl{color:#3A4560;font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-right:4px;}
+.rag-seg{display:flex;align-items:center;gap:4px;color:white;}
+.rag-dot{width:7px;height:7px;border-radius:50%;display:inline-block;}
+.rag-pct{font-weight:700;font-size:11.5px;}.rag-name{color:#7A8EAD;font-size:10px;}
+.rag-sep{color:#2E3D5B;}
+.loading-bar{height:3px;background:linear-gradient(90deg,var(--blue),var(--green),var(--blue));background-size:200% 100%;border-radius:99px;animation:shimmer 1.4s linear infinite;margin-bottom:16px;}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.loading-state{text-align:center;padding:36px;color:var(--muted);}
+.spin{display:inline-block;animation:spin 1s linear infinite;font-size:28px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tabs{display:flex;gap:2px;border-bottom:2px solid var(--border);margin-bottom:16px;}
+.tab{padding:8px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-family:'Inter',sans-serif;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600;}
+.fiche{line-height:1.75;font-size:14px;}
+.fiche h2{font-family:'DM Serif Display',serif;font-size:20px;color:var(--navy);margin:16px 0 8px;border-bottom:2px solid var(--border);padding-bottom:6px;}
+.fiche h3{font-size:13.5px;font-weight:700;color:var(--blue);margin:13px 0 5px;}
+.fiche ul{padding-left:16px;}.fiche li{margin-bottom:3px;}
+.fiche .hl{background:rgba(30,111,217,.07);border-left:3px solid var(--blue);padding:8px 12px;border-radius:0 8px 8px 0;margin:8px 0;}
+.fc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:11px;}
+.fc-card{border:1.5px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;min-height:120px;transition:all .2s;background:white;display:flex;flex-direction:column;}
+.fc-card:hover{border-color:var(--blue);transform:translateY(-2px);box-shadow:0 4px 14px rgba(30,111,217,.1);}
+.fc-card.flipped{background:var(--navy);border-color:var(--navy);}
+.fc-side{font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
+.fc-card:not(.flipped) .fc-side{color:var(--blue);}
+.fc-card.flipped .fc-side{color:var(--green);}
+.fc-text{font-size:13px;line-height:1.5;flex:1;}
+.fc-card:not(.flipped) .fc-text{color:var(--text);font-weight:500;}
+.fc-card.flipped .fc-text{color:rgba(255,255,255,.9);}
+.fc-hint{font-size:10px;margin-top:6px;}
+.fc-card:not(.flipped) .fc-hint{color:var(--muted);}
+.fc-card.flipped .fc-hint{color:rgba(255,255,255,.35);}
+.qcm-card{border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;}
+.qcm-q{font-size:14px;font-weight:600;margin-bottom:12px;line-height:1.4;}
+.qcm-opts{display:flex;flex-direction:column;gap:7px;}
+.qcm-opt{display:flex;align-items:flex-start;gap:8px;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-size:13px;transition:all .15s;background:white;text-align:left;font-family:'Inter',sans-serif;width:100%;}
+.qcm-opt:hover:not([disabled]){border-color:var(--blue);background:rgba(30,111,217,.04);}
+.qcm-opt.correct{border-color:var(--green);background:rgba(34,199,138,.08);color:#0E7A5A;}
+.qcm-opt.wrong{border-color:var(--red);background:rgba(232,68,90,.08);color:var(--red);}
+.qcm-opt:disabled{cursor:default;}
+.qcm-letter{font-weight:700;min-width:18px;color:var(--muted);flex-shrink:0;}
+.qcm-expl{margin-top:10px;background:rgba(34,199,138,.07);border:1px solid rgba(34,199,138,.22);border-radius:8px;padding:10px 12px;font-size:12px;color:#0E7A5A;}
+.chat-wrap{display:flex;flex-direction:column;height:460px;}
+.chat-msgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding-right:4px;padding-bottom:4px;}
+.chat-msg{display:flex;gap:8px;align-items:flex-start;}
+.chat-msg.user{flex-direction:row-reverse;}
+.chat-bbl{max-width:78%;padding:10px 14px;border-radius:14px;font-size:13.5px;line-height:1.6;}
+.chat-msg.ai .chat-bbl{background:var(--bg);border:1px solid var(--border);color:var(--text);border-top-left-radius:4px;}
+.chat-msg.user .chat-bbl{background:var(--blue);color:white;border-top-right-radius:4px;}
+.chat-av{width:28px;height:28px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.chat-in-row{display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);align-items:flex-end;}
+.chat-in{flex:1;padding:10px 13px;border:1.5px solid var(--border);border-radius:10px;font-size:13.5px;font-family:'Inter',sans-serif;outline:none;resize:none;max-height:100px;}
+.chat-in:focus{border-color:var(--blue);}
+.quick-qs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px;}
+.quick-q{padding:5px 10px;background:rgba(30,111,217,.07);color:var(--blue);border:1px solid rgba(30,111,217,.18);border-radius:99px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:500;}
+.quick-q:hover{background:rgba(30,111,217,.14);}
+.deck-item{display:flex;align-items:center;gap:12px;background:white;border:1px solid var(--border);border-radius:10px;padding:11px 14px;cursor:pointer;transition:all .15s;margin-bottom:9px;}
+.deck-item:hover{border-color:var(--blue);}
+.deck-name{font-weight:600;font-size:13.5px;flex:1;}
+.deck-meta{font-size:11px;color:var(--muted);}
+.due-badge{padding:2px 9px;border-radius:99px;font-size:11px;font-weight:600;}
+.due-badge.has{background:rgba(232,68,90,.1);color:var(--red);}
+.due-badge.ok{background:rgba(34,199,138,.1);color:#0E7A5A;}
+.prog-bar{height:5px;background:var(--border);border-radius:99px;overflow:hidden;margin-top:4px;}
+.prog-fill{height:100%;border-radius:99px;transition:width .5s ease;}
+.rev-card{background:white;border:1.5px solid var(--border);border-radius:16px;padding:30px;text-align:center;min-height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:16px;}
+.rev-q{font-size:16px;font-weight:600;line-height:1.5;}
+.rev-a{font-size:13.5px;line-height:1.6;color:var(--navy);background:rgba(34,199,138,.06);border:1px solid rgba(34,199,138,.2);border-radius:10px;padding:12px 14px;margin-top:13px;width:100%;text-align:left;}
+.q-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:13px;width:100%;}
+.q-btn{padding:9px 6px;border-radius:10px;border:none;cursor:pointer;font-size:12px;font-family:'Inter',sans-serif;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.q-btn small{font-size:9px;font-weight:400;opacity:.7;}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+.stat-card{background:white;border:1px solid var(--border);border-radius:12px;padding:14px;}
+.stat-val{font-size:24px;font-weight:700;color:var(--navy);font-family:'DM Serif Display',serif;}
+.stat-lbl{font-size:11px;color:var(--muted);margin-top:2px;}
+.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+.wday{background:white;border:1px solid var(--border);border-radius:8px;padding:9px 5px;text-align:center;}
+.wday.today{border-color:var(--blue);background:rgba(30,111,217,.04);}
+.wday-n{font-size:9px;font-weight:600;color:var(--muted);text-transform:uppercase;}
+.wday-d{font-size:17px;font-weight:700;color:var(--navy);margin:2px 0;}
+.wday.today .wday-d{color:var(--blue);}
+.lib-item{background:white;border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden;}
+.lib-head{display:flex;align-items:center;gap:11px;padding:14px 16px;cursor:pointer;}
+.lib-body{padding:0 16px 16px;border-top:1px solid var(--border);}
+.lib-title{font-weight:600;font-size:13.5px;flex:1;}
+.lib-date{font-size:11px;color:var(--muted);}
+.ref-modes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.ref-mode{border:2px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all .15s;background:white;}
+.ref-mode:hover{border-color:var(--blue);}
+.ref-mode.sel{border-color:var(--blue);background:rgba(30,111,217,.04);}
+.ref-mode .ri{font-size:24px;margin-bottom:6px;}
+.ref-mode .rn{font-size:13px;font-weight:700;}
+.ref-mode .rd{font-size:11.5px;color:var(--muted);margin-top:2px;}
+.plan-day{background:white;border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;}
+.plan-day-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.plan-badge{width:40px;height:40px;border-radius:9px;background:var(--navy);color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;}
+.plan-badge .pdow{font-size:8.5px;text-transform:uppercase;letter-spacing:.5px;opacity:.6;}
+.plan-badge .pdnum{font-size:15px;font-weight:700;font-family:'DM Serif Display',serif;}
+.plan-task{display:flex;align-items:center;gap:9px;font-size:13px;padding:7px 11px;background:var(--bg);border-radius:8px;margin-bottom:6px;}
+.plan-task-dur{font-size:11px;color:var(--muted);margin-left:auto;}
+.score-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:99px;font-size:12px;font-weight:700;}
+.score-badge.good{background:rgba(34,199,138,.12);color:#0E7A5A;}
+.score-badge.mid{background:rgba(245,166,35,.12);color:#B87A0A;}
+.score-badge.bad{background:rgba(232,68,90,.12);color:var(--red);}
+.toast{position:fixed;bottom:22px;right:22px;background:var(--navy);color:white;padding:11px 16px;border-radius:10px;font-size:13px;font-weight:500;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,.3);animation:slideUp .3s ease;display:none;}
+@keyframes slideUp{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+.empty{text-align:center;padding:50px 20px;color:var(--muted);}
+.empty .ei{font-size:42px;margin-bottom:10px;}
+.empty h3{font-size:16px;font-weight:600;color:var(--navy);margin-bottom:5px;}
+@media(max-width:900px){
+  .sidebar{width:54px;min-width:54px;}
+  .s-logo,.s-lbl,.s-btn span:last-child,.s-footer .s-mode strong+*{display:none;}
+  .s-btn{justify-content:center;}
+  .main{margin-left:54px;max-width:calc(100vw - 54px);padding:16px;}
+  .stats-grid,.gen-opts{grid-template-columns:1fr 1fr;}
+  .week-grid{grid-template-columns:repeat(4,1fr);}
+  .ref-modes{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Med<span>Master</span> AI</div>
+    <div class="login-sub">Connectez-vous pour accéder à votre espace</div>
+    <div class="login-err" id="login-err"></div>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="l-email" value="franklinadido7@gmail.com" placeholder="vous@exemple.com"/>
+    </div>
+    <div class="field">
+      <label>Mot de passe</label>
+      <input type="password" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <button class="btn-login" id="login-btn" onclick="doLogin()">Se connecter →</button>
+    <div style="margin-top:14px;font-size:11.5px;color:var(--muted);text-align:center;">
+      🖥️ Serveur local · <span style="color:var(--blue)">localhost:8000</span> · Docker requis
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="s-logo">Med<span>Master</span><small>AI · V3</small></div>
+      <div class="s-lbl">Navigation</div>
+      <button class="s-btn active" onclick="showPage('import',this)"><span>⬆️</span><span>Importer</span></button>
+      <button class="s-btn" onclick="showPage('assistant',this)"><span>🩺</span><span>Assistant IA</span></button>
+      <button class="s-btn" onclick="showPage('revision',this)" id="nav-revision"><span>🔁</span><span>Révision SM-2</span></button>
+      <button class="s-btn" onclick="showPage('library',this)"><span>📚</span><span>Bibliothèque</span></button>
+      <button class="s-btn" onclick="showPage('planning',this)"><span>🗓️</span><span>Planning</span></button>
+      <button class="s-btn" onclick="showPage('references',this)"><span>🎓</span><span>Référentiels</span></button>
+      <button class="s-btn" onclick="showPage('stats',this)"><span>📊</span><span>Tableau de bord</span></button>
+      <div class="s-footer">
+        <div class="s-mode"><strong>Mode actif</strong><span id="mode-display">🌍 International</span></div>
+        <button class="btn-logout" onclick="logout()">🚪 Déconnexion</button>
+      </div>
+    </aside>
+    <main class="main">
+
+      <!-- IMPORT -->
+      <div id="page-import" class="page active">
+        <div class="ph"><h1>Importer & Générer</h1><p>Déposez vos cours pour créer fiches, flashcards et QCM avec l'IA.</p></div>
+        <div class="card">
+          <div class="card-title">📂 Documents de cours</div>
+          <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()"
+               ondragover="event.preventDefault();this.classList.add('drag')"
+               ondragleave="this.classList.remove('drag')"
+               ondrop="handleDrop(event)">
+            <div style="font-size:36px;margin-bottom:8px">☁️</div>
+            <div style="font-size:14px;font-weight:500">Cliquez ou glissez vos fichiers ici</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:3px">PDF, Word, PowerPoint, Image · Max 5 fichiers</div>
+            <div style="margin-top:10px">
+              <span class="fmt-badge">PDF</span><span class="fmt-badge">Word</span>
+              <span class="fmt-badge">PowerPoint</span><span class="fmt-badge">Image</span>
+            </div>
+          </div>
+          <input type="file" id="file-input" multiple accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png" style="display:none" onchange="addFiles(this.files)"/>
+          <div class="file-list" id="file-list"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">⚡ Que générer ?</div>
+          <div class="gen-opts">
+            <div class="gen-opt sel" id="opt-fiche" onclick="toggleOpt('fiche')">
+              <div class="oi">📋</div><div class="ol">Fiche de révision</div><div class="od">Résumé structuré</div>
+            </div>
+            <div class="gen-opt sel" id="opt-flashcards" onclick="toggleOpt('flashcards')">
+              <div class="oi">🃏</div><div class="ol">Flashcards SM-2</div><div class="od">Mémorisées automatiquement</div>
+            </div>
+            <div class="gen-opt sel" id="opt-qcm" onclick="toggleOpt('qcm')">
+              <div class="oi">✅</div><div class="ol">QCM corrigé</div><div class="od">Avec explications</div>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="generate()" id="gen-btn">✨ Générer avec l'IA</button>
+        </div>
+        <div id="gen-loading" style="display:none" class="card">
+          <div class="loading-bar"></div>
+          <div class="loading-state"><span class="spin">⚙️</span><br><br>MedMaster AI analyse vos documents…<br><small style="font-size:11px;color:var(--muted)">Cela peut prendre 30 à 60 secondes</small></div>
+        </div>
+        <div id="gen-results"></div>
+      </div>
+
+      <!-- ASSISTANT -->
+      <div id="page-assistant" class="page">
+        <div class="ph"><h1>Assistant IA Médical</h1><p>Posez vos questions médicales — réponses pédagogiques et sourcées.</p></div>
+        <div class="card">
+          <div class="rag-bar">
+            <span class="rag-lbl">SOURCES</span>
+            <span class="rag-seg"><span class="rag-dot" style="background:var(--green)"></span><span class="rag-pct" id="rpct-u">80%</span><span class="rag-name">Cours</span></span>
+            <span class="rag-sep">·</span>
+            <span class="rag-seg"><span class="rag-dot" style="background:var(--blue)"></span><span class="rag-pct" id="rpct-b">15%</span><span class="rag-name">MedMaster DB</span></span>
+            <span class="rag-sep">·</span>
+            <span class="rag-seg"><span class="rag-dot" style="background:var(--orange)"></span><span class="rag-pct" id="rpct-e">5%</span><span class="rag-name">Ext.</span></span>
+          </div>
+          <div class="quick-qs">
+            <button class="quick-q" onclick="sendChat(this.textContent)">Mécanisme de l'infarctus du myocarde</button>
+            <button class="quick-q" onclick="sendChat(this.textContent)">Urgences hypertensives — CAT</button>
+            <button class="quick-q" onclick="sendChat(this.textContent)">Physiopathologie du diabète type 2</button>
+            <button class="quick-q" onclick="sendChat(this.textContent)">Méningite bactérienne : diagnostic</button>
+            <button class="quick-q" onclick="sendChat(this.textContent)">Syndrome néphrotique : causes et bilan</button>
+          </div>
+          <div class="chat-wrap">
+            <div class="chat-msgs" id="chat-msgs">
+              <div class="chat-msg ai">
+                <div class="chat-av">🩺</div>
+                <div class="chat-bbl">Bonjour ! Je suis <strong>MedMaster AI</strong>. Posez-moi vos questions médicales — je m'appuie sur vos cours et les référentiels officiels.</div>
+              </div>
+            </div>
+            <div class="chat-in-row">
+              <textarea class="chat-in" id="chat-input" placeholder="Posez votre question médicale… (Entrée pour envoyer)" rows="2"
+                onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}"></textarea>
+              <button class="btn btn-primary" onclick="sendChat()">Envoyer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- REVISION -->
+      <div id="page-revision" class="page">
+        <div class="ph"><h1>Révision espacée SM-2</h1><p>Mémorisez durablement grâce à l'algorithme de répétition espacée.</p></div>
+        <div id="revision-content"></div>
+      </div>
+
+      <!-- LIBRARY -->
+      <div id="page-library" class="page">
+        <div class="ph"><h1>Bibliothèque</h1><p>Vos contenus générés et sauvegardés.</p></div>
+        <div id="library-content"></div>
+      </div>
+
+      <!-- PLANNING -->
+      <div id="page-planning" class="page">
+        <div class="ph"><h1>Planning intelligent</h1><p>Un programme de révision sur 7 jours généré par l'IA.</p></div>
+        <div class="card">
+          <div class="card-title">🎯 Paramètres</div>
+          <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+            <div>
+              <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">Date d'examen (optionnel)</label>
+              <input type="date" id="exam-date" style="padding:9px 13px;border:1.5px solid var(--border);border-radius:9px;font-size:13.5px;font-family:'Inter',sans-serif;outline:none;"/>
+            </div>
+            <button class="btn btn-primary" onclick="generatePlan()">✨ Générer mon planning</button>
+          </div>
+        </div>
+        <div id="plan-loading" style="display:none" class="card">
+          <div class="loading-bar"></div>
+          <div class="loading-state"><span class="spin">⚙️</span><br><br>MedMaster AI construit votre planning…</div>
+        </div>
+        <div id="plan-content"></div>
+      </div>
+
+      <!-- REFERENCES -->
+      <div id="page-references" class="page">
+        <div class="ph"><h1>Référentiels & Sources</h1><p>Configurez les sources pédagogiques utilisées par l'IA.</p></div>
+        <div class="card">
+          <div class="card-title">🎓 Mode de référence</div>
+          <div class="ref-modes">
+            <div class="ref-mode" id="ref-fac" onclick="setRefMode('Faculté')">
+              <div class="ri">🏫</div><div class="rn">Mode Faculté</div><div class="rd">Cours locaux de votre université</div>
+            </div>
+            <div class="ref-mode sel" id="ref-intl" onclick="setRefMode('International')">
+              <div class="ri">🌍</div><div class="rn">Mode National & International</div><div class="rd">OMS, Bénin/CEDEAO, ESC, AHA, UpToDate</div>
+            </div>
+          </div>
+          <p style="font-size:12px;color:var(--muted)">💡 Le Bénin ne disposant que d'une seule faculté de médecine, les référentiels nationaux et internationaux sont regroupés dans le mode "National & International".</p>
+        </div>
+        <div class="card">
+          <div class="card-title">⚖️ Préférences de pondération</div>
+          <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px">Indiquez la répartition souhaitée. L'IA s'en rapprochera sans jamais inventer l'origine des informations.</p>
+          <div id="pref-sliders"></div>
+          <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="savePrefs()">✅ Enregistrer les préférences</button>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div id="page-stats" class="page">
+        <div class="ph"><h1>Tableau de bord</h1><p>Votre progression en un coup d'œil.</p></div>
+        <div class="stats-grid" id="stats-grid"></div>
+        <div class="card">
+          <div class="card-title">📅 7 prochains jours</div>
+          <div class="week-grid" id="week-grid"></div>
+        </div>
+        <div id="decks-stats"></div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const BACKEND = "http://localhost:8000";
+let token = localStorage.getItem("mm_token") || null;
+const chatHistory = [];
+
+const state = {
+  files: [],
+  opts: {fiche:true, flashcards:true, qcm:true},
+  result: null,
+  activeTab: "fiche",
+  fcFlipped: {},
+  qcmAnswered: {},
+  decks: JSON.parse(localStorage.getItem("mm_decks")||"[]"),
+  library: JSON.parse(localStorage.getItem("mm_library")||"[]"),
+  refMode: localStorage.getItem("mm_refmode")||"International",
+  ragPrefs: JSON.parse(localStorage.getItem("mm_ragprefs")||'{"user":80,"base":15,"ext":5}'),
+  activeRevDeck: null,
+  revCards: [],
+  revIdx: 0,
+  revRevealed: false,
+  revDone: 0,
+  revCorrect: 0,
+  libExpanded: null,
+  libTab: {},
+};
+
+function saveState() {
+  localStorage.setItem("mm_decks", JSON.stringify(state.decks));
+  localStorage.setItem("mm_library", JSON.stringify(state.library));
+  localStorage.setItem("mm_refmode", state.refMode);
+  localStorage.setItem("mm_ragprefs", JSON.stringify(state.ragPrefs));
+}
+
+// ─── AUTH ────────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const email = document.getElementById("l-email").value.trim();
+  const pass = document.getElementById("l-pass").value;
+  const btn = document.getElementById("login-btn");
+  const err = document.getElementById("login-err");
+  btn.disabled = true; btn.textContent = "Connexion…"; err.style.display = "none";
+  try {
+    const form = new URLSearchParams();
+    form.append("username", email); form.append("password", pass);
+    const r = await fetch(`${BACKEND}/auth/login`, {method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded"}, body:form});
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail||"Identifiants incorrects");
+    token = d.access_token;
+    localStorage.setItem("mm_token", token);
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("app").style.display = "block";
+    initApp();
+  } catch(e) {
+    err.textContent = "❌ " + e.message;
+    err.style.display = "block";
+  }
+  btn.disabled = false; btn.textContent = "Se connecter →";
+}
+
+function logout() {
+  localStorage.removeItem("mm_token"); token = null;
+  document.getElementById("app").style.display = "none";
+  document.getElementById("login-screen").style.display = "flex";
+}
+
+function authH() {
+  const h = {"Content-Type":"application/json"};
+  if (token) h["Authorization"] = "Bearer " + token;
+  return h;
+}
+
+async function apiFetch(path, opts={}) {
+  const r = await fetch(BACKEND + path, {headers: authH(), ...opts});
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.detail||"Erreur API");
+  return d;
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+function initApp() {
+  updateModeDisplay();
+  renderPrefsSliders();
+  renderRevision();
+  renderLibrary();
+  renderStats();
+  // Update ref mode UI
+  document.getElementById("ref-fac").classList.toggle("sel", state.refMode==="Faculté");
+  document.getElementById("ref-intl").classList.toggle("sel", state.refMode==="International");
+}
+
+window.onload = function() {
+  if (token) {
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("app").style.display = "block";
+    initApp();
+  }
+};
+
+// ─── NAV ─────────────────────────────────────────────────────────────────────
+function showPage(id, btn) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".s-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById("page-"+id).classList.add("active");
+  if (btn) btn.classList.add("active");
+  if (id === "revision") renderRevision();
+  if (id === "library") renderLibrary();
+  if (id === "stats") renderStats();
+}
+
+// ─── TOAST ───────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.style.display = "block";
+  setTimeout(() => t.style.display = "none", 3200);
+}
+
+// ─── FILES ───────────────────────────────────────────────────────────────────
+const FI = {pdf:"📕",ppt:"📙",pptx:"📙",doc:"📘",docx:"📘",jpg:"🖼️",jpeg:"🖼️",png:"🖼️"};
+const fi = n => FI[(n||"").split(".").pop().toLowerCase()]||"📄";
+const fs = b => b>1e6 ? `${(b/1e6).toFixed(1)} MB` : `${(b/1e3).toFixed(0)} KB`;
+
+function addFiles(files) {
+  document.getElementById("drop-zone").classList.remove("drag");
+  const ok = ["pdf","doc","docx","ppt","pptx","jpg","jpeg","png"];
+  Array.from(files).forEach(f => {
+    if (ok.includes(f.name.split(".").pop().toLowerCase()) && state.files.length < 5)
+      state.files.push(f);
+  });
+  renderFileList();
+}
+function handleDrop(e) { e.preventDefault(); addFiles(e.dataTransfer.files); }
+function removeFile(i) { state.files.splice(i,1); renderFileList(); }
+function renderFileList() {
+  document.getElementById("file-list").innerHTML = state.files.map((f,i) =>
+    `<div class="file-item">
+      <span>${fi(f.name)}</span>
+      <span class="file-name">${f.name}</span>
+      <span style="font-size:11px;color:var(--muted)">${fs(f.size)}</span>
+      <button class="file-del" onclick="removeFile(${i})">✕</button>
+    </div>`).join("");
+}
+function toggleOpt(k) {
+  const on = Object.keys(state.opts).filter(x => state.opts[x]);
+  if (on.length === 1 && on[0] === k) return;
+  state.opts[k] = !state.opts[k];
+  document.getElementById("opt-"+k).classList.toggle("sel", state.opts[k]);
+}
+
+// ─── GENERATE ────────────────────────────────────────────────────────────────
+async function generate() {
+  if (!state.files.length) { showToast("📂 Importez au moins un fichier"); return; }
+  document.getElementById("gen-loading").style.display = "block";
+  document.getElementById("gen-results").innerHTML = "";
+  document.getElementById("gen-btn").disabled = true;
+  try {
+    const docIds = [];
+    for (const file of state.files.slice(0,3)) {
+      const fd = new FormData(); fd.append("file", file);
+      const r = await fetch(`${BACKEND}/documents/upload`, {method:"POST", headers:{Authorization:"Bearer "+token}, body:fd});
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.detail||"Erreur upload : "+file.name);
+      docIds.push(d.id);
+    }
+    // Attendre indexation RAG
+    await new Promise(res => setTimeout(res, 3000));
+    const result = await apiFetch("/generate", {
+      method:"POST",
+      body: JSON.stringify({
+        document_ids: docIds,
+        generate_fiche: state.opts.fiche,
+        generate_flashcards: state.opts.flashcards,
+        generate_qcm: state.opts.qcm,
+        rag_prefs: state.ragPrefs,
+        ref_mode: state.refMode,
+      })
+    });
+    state.result = result;
+    state.fcFlipped = {}; state.qcmAnswered = {};
+    state.activeTab = state.opts.fiche?"fiche":state.opts.flashcards?"flashcards":"qcm";
+    renderResults();
+    // Auto-save flashcards to SM-2
+    if (result.flashcards?.length) {
+      state.decks.push({
+        id: Date.now()+"", name: result.topic,
+        cards: result.flashcards.map((fc,i) => ({id:Date.now()+"-"+i, q:fc.q, a:fc.a, repetitions:0, easeFactor:2.5, interval:1, nextReview:null}))
+      });
+      saveState();
+      showToast("✅ Généré ! Flashcards ajoutées à vos révisions.");
+    } else {
+      showToast("✅ Contenu généré avec succès !");
+    }
+  } catch(e) {
+    document.getElementById("gen-results").innerHTML = `<div class="card"><div class="empty"><div class="ei">⚠️</div><h3>Erreur</h3><p>${e.message}</p></div></div>`;
+    showToast("❌ "+e.message);
+  }
+  document.getElementById("gen-loading").style.display = "none";
+  document.getElementById("gen-btn").disabled = false;
+}
+
+// ─── RAG BAR ─────────────────────────────────────────────────────────────────
+function ragBarHTML(s) {
+  return `<div class="rag-bar">
+    <span class="rag-lbl">SOURCES IA</span>
+    <span class="rag-seg"><span class="rag-dot" style="background:var(--green)"></span><span class="rag-pct">${s.user||0}%</span><span class="rag-name">Cours</span></span>
+    <span class="rag-sep">·</span>
+    <span class="rag-seg"><span class="rag-dot" style="background:var(--blue)"></span><span class="rag-pct">${s.base||0}%</span><span class="rag-name">MedMaster DB</span></span>
+    <span class="rag-sep">·</span>
+    <span class="rag-seg"><span class="rag-dot" style="background:var(--orange)"></span><span class="rag-pct">${s.ext||0}%</span><span class="rag-name">Ext.</span></span>
+  </div>`;
+}
+
+// ─── RESULTS ─────────────────────────────────────────────────────────────────
+function renderResults() {
+  const r = state.result; if(!r) return;
+  const tabs = [];
+  if(r.fiche) tabs.push(["fiche","📋 Fiche"]);
+  if(r.flashcards?.length) tabs.push(["flashcards",`🃏 Flashcards (${r.flashcards.length})`]);
+  if(r.qcm?.length) tabs.push(["qcm",`✅ QCM (${r.qcm.length})`]);
+  document.getElementById("gen-results").innerHTML = `<div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="font-weight:600;font-size:15px">📖 ${r.topic}</div>
+      <button class="btn btn-outline btn-sm" onclick="saveToLibrary()">💾 Sauvegarder</button>
+    </div>
+    ${ragBarHTML(r.sources||state.ragPrefs)}
+    <div class="tabs">${tabs.map(([id,lbl])=>`<button class="tab ${state.activeTab===id?'active':''}" onclick="switchTab('${id}')">${lbl}</button>`).join("")}</div>
+    <div id="tab-content">${renderTabContent()}</div>
+  </div>`;
+}
+
+function switchTab(tab) {
+  state.activeTab = tab;
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", (tab==="fiche"&&t.textContent.startsWith("📋"))||(tab==="flashcards"&&t.textContent.startsWith("🃏"))||(tab==="qcm"&&t.textContent.startsWith("✅"))));
+  document.getElementById("tab-content").innerHTML = renderTabContent();
+}
+
+function renderTabContent() {
+  const r = state.result; if(!r) return "";
+  if (state.activeTab==="fiche"&&r.fiche) return renderFiche(r.fiche);
+  if (state.activeTab==="flashcards"&&r.flashcards) return renderFlashcards(r.flashcards,"res");
+  if (state.activeTab==="qcm"&&r.qcm) return renderQcm(r.qcm);
+  return "";
+}
+
+function renderFiche(text) {
+  const lines = text.split("\n"); let html = '<div class="fiche">'; let inList = false;
+  lines.forEach(line => {
+    if(line.startsWith("## ")){if(inList){html+="</ul>";inList=false;}html+=`<h2>${line.slice(3)}</h2>`;}
+    else if(line.startsWith("### ")){if(inList){html+="</ul>";inList=false;}html+=`<h3>${line.slice(4)}</h3>`;}
+    else if(line.startsWith("**")&&line.endsWith("**")&&line.length>4){if(inList){html+="</ul>";inList=false;}html+=`<p class="hl"><strong>${line.slice(2,-2)}</strong></p>`;}
+    else if(line.startsWith("- ")){if(!inList){html+="<ul>";inList=true;}html+=`<li>${line.slice(2)}</li>`;}
+    else if(line.trim()){if(inList){html+="</ul>";inList=false;}html+=`<p>${line}</p>`;}
+    else{if(inList){html+="</ul>";inList=false;}}
+  });
+  if(inList)html+="</ul>"; html+="</div>"; return html;
+}
+
+function renderFlashcards(cards, prefix) {
+  return `<p style="font-size:12px;color:var(--muted);margin-bottom:12px">💡 Cliquez pour retourner la carte</p>
+  <div class="fc-grid">${cards.map((fc,i) => {
+    const key = prefix+"-"+i; const fl = state.fcFlipped[key];
+    return `<div class="fc-card ${fl?'flipped':''}" onclick="flipCard('${key}','${prefix}')">
+      <div class="fc-side">${fl?"Réponse":"Question"}</div>
+      <div class="fc-text">${fl?fc.a:fc.q}</div>
+      <div class="fc-hint">${fl?"← Retourner":"Cliquer pour la réponse"}</div>
+    </div>`;
+  }).join("")}</div>`;
+}
+
+function flipCard(key, prefix) {
+  state.fcFlipped[key] = !state.fcFlipped[key];
+  if (prefix==="res") { document.getElementById("tab-content").innerHTML = renderTabContent(); }
+  else { renderLibrary(); }
+}
+
+function renderQcm(questions, prefix) {
+  const done = Object.keys(state.qcmAnswered).length;
+  const correct = done ? questions.filter((_,i)=>state.qcmAnswered[i]===questions[i].correct).length : 0;
+  let html = "";
+  if (done===questions.length&&done>0) {
+    const pct = Math.round(correct/done*100);
+    html += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:10px 14px;background:var(--bg);border-radius:9px">
+      <span style="font-weight:600;font-size:13.5px">Score :</span>
+      <span class="score-badge ${pct>=80?'good':pct>=50?'mid':'bad'}">${correct}/${done} — ${pct}%</span>
+      <button class="btn btn-outline btn-sm" onclick="resetQcm()">🔄 Recommencer</button>
+    </div>`;
+  }
+  html += questions.map((q,qi)=>`
+    <div class="qcm-card">
+      <div class="qcm-q">Q${qi+1}. ${q.question}</div>
+      <div class="qcm-opts">${q.options.map((opt,oi)=>{
+        let cls="qcm-opt";
+        if(state.qcmAnswered[qi]!==undefined){if(oi===q.correct)cls+=" correct";else if(oi===state.qcmAnswered[qi])cls+=" wrong";}
+        return `<button class="${cls}" ${state.qcmAnswered[qi]!==undefined?"disabled":""} onclick="answerQcm(${qi},${oi})">
+          <span class="qcm-letter">${String.fromCharCode(65+oi)}.</span><span>${opt}</span>
+        </button>`;
+      }).join("")}</div>
+      ${state.qcmAnswered[qi]!==undefined?`<div class="qcm-expl">💡 ${q.explication}</div>`:""}
+    </div>`).join("");
+  return html;
+}
+
+function answerQcm(qi, oi) {
+  state.qcmAnswered[qi] = oi;
+  document.getElementById("tab-content").innerHTML = renderTabContent();
+}
+function resetQcm() { state.qcmAnswered = {}; document.getElementById("tab-content").innerHTML = renderTabContent(); }
+
+function saveToLibrary() {
+  if(!state.result) return;
+  state.library.unshift({id:Date.now()+"", topic:state.result.topic, fiche:state.result.fiche, flashcards:state.result.flashcards, qcm:state.result.qcm, sources:state.result.sources||state.ragPrefs, savedAt:new Date().toISOString()});
+  saveState(); showToast("💾 Enregistré dans la Bibliothèque !");
+}
+
+// ─── CHAT ────────────────────────────────────────────────────────────────────
+async function sendChat(text) {
+  const input = document.getElementById("chat-input");
+  const msg = text || input.value.trim(); if(!msg) return;
+  input.value = "";
+  addBubble("user", msg);
+  chatHistory.push({role:"user",content:msg});
+  const tid = "typing-"+Date.now();
+  addBubble("ai", "…", tid);
+  try {
+    const r = await apiFetch("/assistant/chat", {method:"POST", body:JSON.stringify({messages:chatHistory,ref_mode:state.refMode,rag_prefs:state.ragPrefs})});
+    document.getElementById(tid)?.remove();
+    const reply = r.reply||"";
+    chatHistory.push({role:"assistant",content:reply});
+    addBubble("ai", reply);
+    if(r.sources){
+      document.getElementById("rpct-u").textContent=r.sources.user+"%";
+      document.getElementById("rpct-b").textContent=r.sources.base+"%";
+      document.getElementById("rpct-e").textContent=r.sources.ext+"%";
+    }
+  } catch(e) {
+    document.getElementById(tid)?.remove();
+    addBubble("ai","❌ Erreur : "+e.message);
+  }
+}
+
+function addBubble(role, text, id) {
+  const msgs = document.getElementById("chat-msgs");
+  const div = document.createElement("div");
+  div.className = "chat-msg " + role;
+  if(id) div.id = id;
+  const av = `<div class="chat-av">${role==="ai"?"🩺":"👤"}</div>`;
+  const bbl = `<div class="chat-bbl">${text.replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>").replace(/\n/g,"<br>")}</div>`;
+  div.innerHTML = role==="ai" ? av+bbl : bbl+av;
+  msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
+}
+
+// ─── SM-2 ────────────────────────────────────────────────────────────────────
+const isDue = c => !c.nextReview || new Date(c.nextReview) <= new Date();
+
+function renderRevision() {
+  const el = document.getElementById("revision-content"); if(!el)return;
+  if (state.activeRevDeck !== null) { renderRevSession(el); return; }
+  const totalDue = state.decks.reduce((s,d)=>s+d.cards.filter(isDue).length,0);
+  if(!state.decks.length) {
+    el.innerHTML = `<div class="card"><div class="empty"><div class="ei">🃏</div><h3>Aucun paquet</h3><p>Importez des cours pour générer des flashcards.</p></div></div>`; return;
+  }
+  el.innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-val">${state.decks.length}</div><div class="stat-lbl">Paquets</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:${totalDue>0?'var(--red)':'var(--green)'}">${totalDue}</div><div class="stat-lbl">Dues aujourd'hui</div></div>
+      <div class="stat-card"><div class="stat-val">${state.decks.reduce((s,d)=>s+d.cards.length,0)}</div><div class="stat-lbl">Total cartes</div></div>
+      <div class="stat-card"><div class="stat-val">${state.decks.reduce((s,d)=>s+d.cards.filter(c=>(c.repetitions||0)>=3).length,0)}</div><div class="stat-lbl">Maîtrisées</div></div>
+    </div>
+    ${state.decks.map((d,di)=>{
+      const due=d.cards.filter(isDue).length;
+      const mst=d.cards.filter(c=>(c.repetitions||0)>=3).length;
+      const pct=d.cards.length?Math.round(mst/d.cards.length*100):0;
+      return `<div class="deck-item" ${due>0?`onclick="startRev(${di})"`:"style='cursor:default;opacity:.7'"}>
+        <span style="font-size:22px">📚</span>
+        <div style="flex:1">
+          <div class="deck-name">${d.name}</div>
+          <div class="deck-meta">${d.cards.length} cartes · ${pct}% maîtrisées</div>
+          <div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${pct>70?'var(--green)':pct>40?'var(--orange)':'var(--red)'}"></div></div>
+        </div>
+        <span class="due-badge ${due>0?'has':'ok'}">${due>0?due+' dues':'✓ À jour'}</span>
+      </div>`;
+    }).join("")}`;
+}
+
+function startRev(di) {
+  state.activeRevDeck=di; state.revCards=state.decks[di].cards.filter(isDue);
+  state.revIdx=0; state.revRevealed=false; state.revDone=0; state.revCorrect=0;
+  renderRevision();
+}
+
+function renderRevSession(el) {
+  const deck = state.decks[state.activeRevDeck];
+  if (state.revIdx >= state.revCards.length) {
+    const pct = state.revDone ? Math.round(state.revCorrect/state.revDone*100) : 0;
+    el.innerHTML = `<div class="card" style="text-align:center;padding:40px">
+      <div style="font-size:48px;margin-bottom:10px">🎉</div>
+      <h2 style="font-family:'DM Serif Display',serif;font-size:22px;margin-bottom:8px">Session terminée !</h2>
+      <p style="color:var(--muted)">${state.revDone} cartes révisées — ${state.revCorrect} correctes (${pct}%)</p>
+      <button class="btn btn-outline" style="margin-top:20px" onclick="state.activeRevDeck=null;renderRevision()">← Retour aux paquets</button>
+    </div>`; return;
+  }
+  const card = state.revCards[state.revIdx];
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <button class="btn btn-outline btn-sm" onclick="state.activeRevDeck=null;renderRevision()">← Quitter</button>
+      <span style="font-size:13px;color:var(--muted)">${deck.name} · ${state.revIdx+1}/${state.revCards.length}</span>
+    </div>
+    <div class="prog-bar" style="margin-bottom:14px"><div class="prog-fill" style="width:${state.revIdx/state.revCards.length*100}%"></div></div>
+    <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+      <div class="stat-card"><div class="stat-val">${state.revCards.length-state.revIdx}</div><div class="stat-lbl">Restantes</div></div>
+      <div class="stat-card"><div class="stat-val">${state.revDone}</div><div class="stat-lbl">Faites</div></div>
+      <div class="stat-card"><div class="stat-val">${state.revCorrect}</div><div class="stat-lbl">Correctes</div></div>
+    </div>
+    <div class="rev-card">
+      <div class="rev-q">${card.q}</div>
+      ${state.revRevealed?`<div class="rev-a">${card.a}</div>`:
+      `<button style="background:var(--navy);color:white;border:none;border-radius:10px;padding:11px 26px;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:14px;font-family:'Inter',sans-serif" onclick="state.revRevealed=true;renderRevision()">Révéler la réponse</button>`}
+    </div>
+    ${state.revRevealed?`<div class="card">
+      <div class="card-title">Comment avez-vous répondu ?</div>
+      <div class="q-btns">
+        ${[["Blackout","Aucun souvenir","rgba(232,68,90,.12)","var(--red)"],
+           ["Raté","Très difficile","rgba(232,68,90,.08)","var(--red)"],
+           ["Difficile","Avec aide","rgba(245,166,35,.1)","#B87A0A"],
+           ["Correct","Avec effort","rgba(245,166,35,.1)","#B87A0A"],
+           ["Bien","Facile","rgba(34,199,138,.1)","#0E7A5A"],
+           ["Parfait","Immédiat","rgba(34,199,138,.14)","#0E7A5A"]
+          ].map(([l,s,bg,col],qi)=>`
+          <button class="q-btn" style="background:${bg};color:${col}" onclick="rateCard(${qi})">
+            ${l}<small>${s}</small>
+          </button>`).join("")}
+      </div>
+    </div>`:""}`;
+}
+
+function rateCard(quality) {
+  const card = state.revCards[state.revIdx];
+  let {interval=1,repetitions=0,easeFactor=2.5} = card;
+  if(quality>=3){interval=repetitions===0?1:repetitions===1?6:Math.round(interval*easeFactor);repetitions++;}
+  else{repetitions=0;interval=1;}
+  easeFactor=Math.max(1.3,easeFactor+0.1-(5-quality)*(0.08+(5-quality)*0.02));
+  const nr=new Date(); nr.setDate(nr.getDate()+interval);
+  const ci = state.decks[state.activeRevDeck].cards.findIndex(c=>c.id===card.id);
+  if(ci>=0) state.decks[state.activeRevDeck].cards[ci]={...card,interval,repetitions,easeFactor,nextReview:nr.toISOString()};
+  saveState(); state.revDone++; if(quality>=3)state.revCorrect++;
+  state.revIdx++; state.revRevealed=false; renderRevision();
+}
+
+// ─── LIBRARY ─────────────────────────────────────────────────────────────────
+function renderLibrary() {
+  const el = document.getElementById("library-content"); if(!el)return;
+  if(!state.library.length){
+    el.innerHTML=`<div class="card"><div class="empty"><div class="ei">📚</div><h3>Bibliothèque vide</h3><p>Cliquez sur "💾 Sauvegarder" après une génération.</p></div></div>`;return;
+  }
+  el.innerHTML = state.library.map((item,i)=>{
+    const exp=state.libExpanded===item.id;
+    const at=state.libTab[item.id]||(item.fiche?"fiche":item.flashcards?"flashcards":"qcm");
+    const date=new Date(item.savedAt).toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"});
+    return `<div class="lib-item">
+      <div class="lib-head" onclick="toggleLib('${item.id}')">
+        <span style="font-size:20px">📖</span>
+        <div style="flex:1"><div class="lib-title">${item.topic}</div><div class="lib-date">${date}</div></div>
+        <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();deleteLib('${item.id}')">🗑️</button>
+        <span style="color:var(--muted);font-size:12px;margin-left:8px">${exp?"▼":"▶"}</span>
+      </div>
+      ${exp?`<div class="lib-body">
+        ${ragBarHTML(item.sources||state.ragPrefs)}
+        <div class="tabs">
+          ${item.fiche?`<button class="tab ${at==='fiche'?'active':''}" onclick="setLibTab('${item.id}','fiche')">📋 Fiche</button>`:""}
+          ${item.flashcards?`<button class="tab ${at==='flashcards'?'active':''}" onclick="setLibTab('${item.id}','flashcards')">🃏 Flashcards</button>`:""}
+          ${item.qcm?`<button class="tab ${at==='qcm'?'active':''}" onclick="setLibTab('${item.id}','qcm')">✅ QCM</button>`:""}
+        </div>
+        ${at==='fiche'&&item.fiche?renderFiche(item.fiche):""}
+        ${at==='flashcards'&&item.flashcards?renderFlashcards(item.flashcards,"lib"+i):""}
+        ${at==='qcm'&&item.qcm?renderQcm(item.qcm):""}
+      </div>`:""}
+    </div>`;
+  }).join("");
+}
+function toggleLib(id){state.libExpanded=state.libExpanded===id?null:id;renderLibrary();}
+function setLibTab(id,tab){state.libTab[id]=tab;renderLibrary();}
+function deleteLib(id){state.library=state.library.filter(i=>i.id!==id);saveState();renderLibrary();}
+
+// ─── PLANNING ────────────────────────────────────────────────────────────────
+const DAYS=["Dim","Lun","Mar","Mer","Jeu","Ven","Sam"];
+const MONTHS=["jan","fév","mar","avr","mai","jun","jul","aoû","sep","oct","nov","déc"];
+const PICONS={révision:"🔁",lecture:"📖",qcm:"✅",pause:"☕",concept:"🧠",fiche:"📋"};
+
+async function generatePlan() {
+  document.getElementById("plan-loading").style.display="block";
+  document.getElementById("plan-content").innerHTML="";
+  try {
+    const examDate=document.getElementById("exam-date").value;
+    const data=await apiFetch("/planning/generate",{method:"POST",body:JSON.stringify({exam_date:examDate||null})});
+    document.getElementById("plan-content").innerHTML=`
+      <div class="card" style="background:var(--navy);border:none">
+        <p style="color:white;font-size:14px;line-height:1.6">💡 ${data.intro}</p>
+      </div>
+      ${(data.days||[]).map(day=>{
+        const d=new Date(day.date+"T00:00:00");
+        return `<div class="plan-day">
+          <div class="plan-day-head">
+            <div class="plan-badge"><span class="pdow">${DAYS[d.getDay()]}</span><span class="pdnum">${d.getDate()}</span></div>
+            <div><div style="font-weight:700;font-size:14px">${day.title}</div><div style="font-size:11.5px;color:var(--muted)">${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}</div></div>
+          </div>
+          ${(day.tasks||[]).map(t=>`<div class="plan-task"><span>${PICONS[t.type]||"📌"}</span><span>${t.label}</span><span class="plan-task-dur">${t.duration}</span></div>`).join("")}
+        </div>`;
+      }).join("")}`;
+    showToast("✅ Planning généré !");
+  } catch(e){showToast("❌ "+e.message);}
+  document.getElementById("plan-loading").style.display="none";
+}
+
+// ─── REFERENCES ──────────────────────────────────────────────────────────────
+function setRefMode(mode){
+  state.refMode=mode;
+  document.getElementById("ref-fac").classList.toggle("sel",mode==="Faculté");
+  document.getElementById("ref-intl").classList.toggle("sel",mode==="International");
+  updateModeDisplay(); saveState(); showToast("✅ Mode "+mode+" activé");
+}
+function updateModeDisplay(){
+  const el=document.getElementById("mode-display");
+  if(el) el.textContent=state.refMode==="Faculté"?"🏫 Faculté":"🌍 International";
+}
+function renderPrefsSliders(){
+  const el=document.getElementById("pref-sliders"); if(!el)return;
+  [["user","var(--green)","Cours utilisateur"],["base","var(--blue)","MedMaster DB"],["ext","var(--orange)","Sources ext."]].forEach(([k,col,lbl])=>{
+    el.innerHTML+=`<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+      <span style="width:9px;height:9px;border-radius:50%;background:${col};display:inline-block;flex-shrink:0"></span>
+      <span style="width:120px;font-size:12.5px">${lbl}</span>
+      <input type="range" min="0" max="100" value="${state.ragPrefs[k]}" oninput="updatePref('${k}',this.value)" style="flex:1;accent-color:${col}"/>
+      <span id="pv-${k}" style="width:36px;text-align:right;font-weight:700;font-size:12.5px">${state.ragPrefs[k]}%</span>
+    </div>`;
+  });
+}
+function updatePref(key,val){
+  val=Math.max(0,Math.min(100,parseInt(val)));
+  const others=["user","base","ext"].filter(k=>k!==key);
+  const osum=others.reduce((s,k)=>s+state.ragPrefs[k],0);
+  const rem=100-val; state.ragPrefs[key]=val;
+  if(osum===0){others.forEach((k,i)=>state.ragPrefs[k]=i===0?rem:0);}
+  else{others.forEach(k=>state.ragPrefs[k]=Math.round(state.ragPrefs[k]/osum*rem));}
+  const diff=100-Object.values(state.ragPrefs).reduce((a,b)=>a+b,0);
+  state.ragPrefs[others[0]]+=diff;
+  ["user","base","ext"].forEach(k=>{const e=document.getElementById("pv-"+k);if(e)e.textContent=state.ragPrefs[k]+"%";});
+}
+function savePrefs(){saveState();showToast("✅ Préférences enregistrées !");}
+
+// ─── STATS ───────────────────────────────────────────────────────────────────
+function renderStats(){
+  const tc=state.decks.reduce((s,d)=>s+d.cards.length,0);
+  const td=state.decks.reduce((s,d)=>s+d.cards.filter(isDue).length,0);
+  const ms=state.decks.reduce((s,d)=>s+d.cards.filter(c=>(c.repetitions||0)>=3).length,0);
+  const pct=tc?Math.round(ms/tc*100):0;
+  const sg=document.getElementById("stats-grid");
+  if(sg)sg.innerHTML=[
+    [state.decks.length,"Paquets actifs",null],
+    [tc,"Flashcards totales",null],
+    [td,"À réviser aujourd'hui",td>0?"var(--red)":"var(--green)"],
+    [pct+"%","Taux de maîtrise",pct>70?"var(--green)":pct>40?"var(--orange)":"var(--red)"],
+  ].map(([v,l,c])=>`<div class="stat-card"><div class="stat-val" ${c?`style="color:${c}"`:""}>${v}</div><div class="stat-lbl">${l}</div></div>`).join("");
+  const wg=document.getElementById("week-grid");
+  if(wg){const t=new Date();wg.innerHTML=Array.from({length:7},(_,i)=>{const d=new Date(t);d.setDate(t.getDate()+i);return`<div class="wday ${i===0?'today':''}"><div class="wday-n">${DAYS[d.getDay()]}</div><div class="wday-d">${d.getDate()}</div><div style="font-size:9.5px;color:var(--muted)">${MONTHS[d.getMonth()]}</div></div>`;}).join("");}
+  const ds=document.getElementById("decks-stats");
+  if(ds&&state.decks.length)ds.innerHTML=`<div class="card"><div class="card-title">📊 Progression par paquet</div>
+    ${state.decks.map(d=>{const due=d.cards.filter(isDue).length;const mst=d.cards.filter(c=>(c.repetitions||0)>=3).length;const p=d.cards.length?Math.round(mst/d.cards.length*100):0;
+    return`<div style="margin-bottom:13px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px"><span>${d.name}</span><span style="color:var(--muted)">${p}% · <span style="color:${due>0?'var(--red)':'var(--green)'};font-weight:600">${due} dues</span></span></div>
+    <div class="prog-bar"><div class="prog-fill" style="width:${p}%;background:${p>70?'var(--green)':p>40?'var(--orange)':'var(--red)'}"></div></div></div>`;}).join("")}
+  </div>`;
+}
+</script>
+</body>
+</html>
