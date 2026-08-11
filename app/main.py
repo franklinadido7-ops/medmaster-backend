@@ -6,7 +6,10 @@ from app import models  # noqa: F401 — assure l'enregistrement des modèles
 from app.routers import auth, documents, generate, decks, library, assistant, concepts, planning, admin
 
 # Crée les tables si elles n'existent pas encore (complément du sql/schema.sql)
-Base.metadata.create_all(bind=engine)
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as e:
+    print(f"DB warning: {e}")
 
 app = FastAPI(
     title="MedMaster AI — API",

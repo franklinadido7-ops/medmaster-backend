@@ -92,49 +92,14 @@ def ingest_reference_document(db: Session, ref_doc: models.ReferenceDocument) ->
     db.commit()
     return len(chunks)
 
-
 def retrieve_context(
-    db: Session,
+    db,
     user_id: str,
     query: str,
     ref_mode: str = "International",
-    top_k: Optional[int] = None,
+    top_k=None,
 ) -> dict:
-    """
-    Implémente la hiérarchie RAG décrite dans le cahier des charges :
-      1. Documents de l'utilisateur (priorité maximale)
-      2. Base documentaire MedMaster (cours validés, filtrés par ref_mode)
-      3. (Sources externes validées — gérées directement par le prompt de Claude,
-         qui peut s'appuyer sur ses connaissances + recommandations officielles)
-
-    Retourne un dict avec les passages trouvés par niveau, pour construire le
-    prompt de génération avec un contexte hiérarchisé et transparent.
-    """
-    top_k = top_k or settings.RAG_TOP_K
-    qc.ensure_collections()
-
-    query_vector = embed_texts([query])[0]
-
-    # Niveau 1 — documents de l'utilisateur uniquement
-    user_chunks = qc.search(
-        settings.QDRANT_COLLECTION_USER,
-        query_vector,
-        top_k=top_k,
-        filter_conditions={"user_id": user_id},
-    )
-
-    # Niveau 2 — base documentaire officielle, filtrée par mode de référence
-    base_chunks = qc.search(
-        settings.QDRANT_COLLECTION_REFERENCE,
-        query_vector,
-        top_k=top_k,
-        filter_conditions={"ref_mode": ref_mode},
-    )
-
-    return {
-        "user_chunks": user_chunks,    # niveau 1
-        "base_chunks": base_chunks,    # niveau 2
-        # Le niveau 3 (sources externes) et 4 (génération pure) sont couverts
-        # par les connaissances de Claude lors de la génération si les niveaux
-        # 1 et 2 sont insuffisants.
-    }
+    """RAG simplifié pour Render — retourne contexte vide.
+    Claude utilisera ses connaissances générales pour générer le contenu.
+    Le vrai RAG sera activé sur Railway avec Qdrant."""
+    return {"user_chunks": [], "base_chunks": []}
