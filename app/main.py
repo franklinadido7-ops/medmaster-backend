@@ -1,11 +1,12 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from app.database import Base, engine
-from app import models  # noqa: F401 — assure l'enregistrement des modèles
+from app import models  # noqa: F401
 from app.routers import auth, documents, generate, decks, library, assistant, concepts, planning, admin
 
-# Crée les tables si elles n'existent pas encore (complément du sql/schema.sql)
+# Crée les tables si elles n'existent pas encore
 try:
     Base.metadata.create_all(bind=engine)
 except Exception as e:
@@ -19,15 +20,28 @@ app = FastAPI(
         "planning intelligent et architecture RAG hiérarchisée."
     ),
     version="1.0.0",
+    # Cacher les détails techniques en production
+    docs_url="/docs" if os.getenv("ENV", "production") == "development" else None,
+    redoc_url=None,
 )
 
-# CORS — autorise le frontend (React / Flutter Web) à appeler l'API
+# CORS — domaines autorisés
+ALLOWED_ORIGINS = [
+    "http://localhost:8000",
+    "http://localhost:3000",
+    "http://127.0.0.1:8000",
+    # Render (actuel)
+    "https://medmaster-backend-1.onrender.com",
+    # Railway (futur) — sera ajouté quand disponible
+    # "https://votre-app.railway.app",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # ⚠️ à restreindre en production (domaine du frontend)
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 app.include_router(auth.router)
@@ -40,9 +54,14 @@ app.include_router(concepts.router)
 app.include_router(planning.router)
 app.include_router(admin.router)
 
-
 @app.get("/", tags=["Santé"])
 def health_check():
     return {"status": "ok", "service": "MedMaster AI API"}
-from fastapi.staticfiles import StaticFiles
-app.mount("/static", StaticFiles(directory="/app/static"), name="static")
+
+# Fichiers statiques (interface HTML)
+try:
+    from fastapi.staticfiles import StaticFiles
+    if os.path.exists("/app/static"):
+        app.mount("/static", StaticFiles(directory="/app/static"), name="static")
+except Exception as e:
+    print(f"Static warning: {e}")

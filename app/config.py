@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # Sécurité
-    SECRET_KEY: str = "changeme"
+    SECRET_KEY: str = "MedMaster2026BeninadicLongueChaine123456789"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 jours
 
@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     QDRANT_COLLECTION_REFERENCE: str = "medmaster_reference_docs"
 
     # IA
-    ANTHROPIC_API_KEY: str = "sk-ant-api03-g4Q...mgAA"
+    ANTHROPIC_API_KEY: str = ""
     OPENAI_API_KEY: str = ""
     CLAUDE_MODEL: str = "claude-sonnet-4-6"
     EMBEDDING_MODEL: str = "text-embedding-3-small"  # 1536 dimensions
