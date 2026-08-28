@@ -26,6 +26,11 @@ async def upload_document(
     ext = file.filename.rsplit(".", 1)[-1].lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(status_code=400, detail=f"Format non supporté : .{ext}")
+    # Limite : 10 MB maximum
+    MAX_FILE_SIZE = 10 * 1024 * 1024
+    contents = await file.read()
+    if len(contents) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=413, detail="Fichier trop volumineux. Maximum : 10 MB")
 
     user_dir = os.path.join(settings.UPLOAD_DIR, current_user.id)
     os.makedirs(user_dir, exist_ok=True)
@@ -33,7 +38,6 @@ async def upload_document(
     stored_name = f"{uuid.uuid4()}.{ext}"
     storage_path = os.path.join(user_dir, stored_name)
 
-    contents = await file.read()
     with open(storage_path, "wb") as f:
         f.write(contents)
 
